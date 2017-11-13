@@ -6,6 +6,6 @@ module.exports = deployer => {
   deployer.deploy(Random)
   deployer.deploy(Utils)
   deployer.link(Random, Lottery)
-  deployer.link(Utils, Lottoh)
-  deployer.deploy(Lottoh)
+  deployer.link(Utils, Lottery)
+  deployer.deploy(Lottery)
 };

@@ -29,8 +29,8 @@ contract Lottery is Ownable {
 
   mapping (address => Ticket) public tickets;
   mapping (uint256 => address) public players;
-  uint256 public numberOfPlayers;
-  bool public open;
+  uint256 private numberOfPlayers;
+  bool private open;
 
   uint256 start;
 
@@ -41,9 +41,17 @@ contract Lottery is Ownable {
   event Play(address player, uint[] numbers);
   event End(address[] winners, uint[] winningNumbers, uint value);
 
-  function Lottoh() public {
+  function Lottery() public {
     owner = msg.sender;
     playOn(now);
+  }
+
+  function isOpen() public view returns (bool) {
+    return open;
+  }
+
+  function getNumberOfPlayers() public view returns (uint) {
+    return numberOfPlayers;
   }
 
   function getBalance() public view returns (uint) {
@@ -93,7 +101,7 @@ contract Lottery is Ownable {
   }
 
   function chooseWinners() public view onlyOwner returns (uint[]) {
-    uint seed = uint(keccak256(block.timestamp))%100 +1;
+    uint seed = uint(keccak256(block.timestamp))%1000 +1; // Lame as hell, see Random.sol's comment
     uint[] memory numbers = new uint[](size);
     uint numberOfWinningNumbers = 0;
     while (numberOfWinningNumbers < size) {
@@ -113,7 +121,7 @@ contract Lottery is Ownable {
     return numbers;
   }
 
-  function endLottohWithNumbers(uint[] winningNumbers) public onlyOwner {
+  function endLottohWithNumbers(uint[] winningNumbers) public onlyOwner isValid(winningNumbers) {
     if (!open) {
       uint meMoney = ownerGains();
       uint prize = this.balance - meMoney;
@@ -140,11 +148,11 @@ contract Lottery is Ownable {
   }
 
   function endLottoh() public onlyOwner {
-    uint[] memory winningNumbers = chooseWinners(); // This method sucks, it can't get more pseudo
+    uint[] memory winningNumbers = chooseWinners(); // This method sucks, it can't get any more pseudo
     endLottohWithNumbers(winningNumbers);
   }
 
-  function markWinners(uint[] winningNumbers) public onlyOwner isValid(winningNumbers) returns (uint256) {
+  function markWinners(uint[] winningNumbers) private onlyOwner returns (uint256) {
     uint position;
     for (uint256 i = 0; i < numberOfPlayers; i++) {
       address player = players[i];
@@ -157,15 +165,11 @@ contract Lottery is Ownable {
     return position;
   }
 
-  function getLastLottohResult() public returns (uint[], address[], uint) {
+  function getLastResult() public returns (uint[], address[], uint) {
     require(previousWinners.length > 0);
     Result memory lastResult = previousWinners[previousWinners.length - 1];
     return (lastResult.numbers, lastResult.winners, lastResult.value);
   }
-
-  function tup() public pure returns (uint, uint, uint) {
-        return (1, 2, 3);
-    }
 
   function reset() private onlyOwner {
     numberOfPlayers = 0;
